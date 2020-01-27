@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+has_param() {
+    local term="$1"
+    shift
+    for arg; do
+        if [[ $arg == "$term" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+. ./scripts/flags/declares.sh
+
+variables["--mode"]="mode"
+variables["--config"]="config"
+
+. ./scripts/flags/arguments.sh
+
+mode=${mode:-"train"}
+config=${config:-"default"}
+
+echo "Running $mode mode with $config configuration file"
+
+all=""
+
+if has_param '--all' "$@"
+then
+    all="_all"
+fi
+
+if [ ! -f src/nn/config/config_$config.conf ]; then
+    echo "The entered config file \"src/nn/config/config_$config.conf\" does not exists"
+    exit 1
+fi
+
+if [ ! -f src/nn/config/config_$config.conf ]; then
+    echo "The entered execution mode: \"$mode\" does not exists for NN model"
+    exit 1
+fi
+
+python src/nn/scripts/$mode/run_$mode$all.py --config src/nn/config/config_$config.conf
