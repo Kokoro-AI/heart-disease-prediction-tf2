@@ -12,20 +12,17 @@ COPY src /tf/notebooks
 # Needed for string testing
 SHELL ["/bin/bash", "-c"]
 
-RUN apt-get update -q
-RUN apt-get install -y libsm6 libxext6 libxrender-dev
-RUN apt-get install -y git nano
-
-RUN apt-get clean
-RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN python3 --version
+RUN apt-get update -q && \
+    apt-get install -y libsm6 libxext6 libxrender-dev && \
+    apt-get install -y git nano && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install models, scripts and heart-disease-prediction utils
 RUN pip3 install -e /develop/
 
-RUN pip3 install sklearn opencv-python IPython
-RUN if [[ "$DOCKER_ENV" = "gpu" ]]; then echo -e "\e[1;31mINSTALLING GPU SUPPORT\e[0;33m"; pip3 install -U tf-nightly-gpu-2.0-preview tb-nightly; fi
+RUN pip3 install sklearn opencv-python IPython && \
+    if [[ "$DOCKER_ENV" = "gpu" ]]; then echo -e "\e[1;31mINSTALLING GPU SUPPORT\e[0;33m"; pip3 install -U tf-nightly-gpu-2.0-preview tb-nightly; fi
 
 WORKDIR /develop
 
