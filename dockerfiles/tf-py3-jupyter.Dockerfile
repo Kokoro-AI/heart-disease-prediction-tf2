@@ -7,7 +7,6 @@ FROM ulisesjeremias/tf-docker:${DOCKER_ENV}-jupyter
 ARG DOCKER_ENV
 
 ADD . /develop
-COPY src /tf/notebooks
 
 # Needed for string testing
 SHELL ["/bin/bash", "-c"]
@@ -19,11 +18,9 @@ RUN apt-get update -q && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install models, scripts and heart-disease-prediction utils
-RUN pip3 install -e /develop/
-
-RUN pip3 install sklearn opencv-python IPython && \
+RUN pip install --upgrade pip && \
+    pip3 install -e /develop && \
+    pip3 install seaborn sklearn opencv-python IPython && \
     if [[ "$DOCKER_ENV" = "gpu" ]]; then echo -e "\e[1;31mINSTALLING GPU SUPPORT\e[0;33m"; pip3 install -U tf-nightly-gpu-2.0-preview tb-nightly; fi
 
 WORKDIR /develop
-
-CMD ["bash", "-c", "source /etc/bash.bashrc && /develop/bin/execute"]
