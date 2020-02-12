@@ -13,14 +13,14 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update -q && \
     apt-get install -y libsm6 libxext6 libxrender-dev && \
-    apt-get install -y git nano && \
+    apt-get install -y git nano graphviz && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install models, scripts and heart-disease-prediction utils
 RUN pip install --upgrade pip && \
     pip3 install -e /develop && \
-    pip3 install seaborn sklearn opencv-python IPython && \
+    pip3 install seaborn eli5 shap pdpbox sklearn opencv-python IPython && \
     if [[ "$DOCKER_ENV" = "gpu" ]]; then echo -e "\e[1;31mINSTALLING GPU SUPPORT\e[0;33m"; pip3 install -U tf-nightly-gpu-2.0-preview tb-nightly; fi
 
 WORKDIR /develop
