@@ -19,7 +19,7 @@ columns_whitelist = ['age', 'chest_pain_type', 'resting_blood_pressure',
 for i, patient in df.iterrows():
     for (k, v) in patient.items():
         if k in columns_whitelist:
-            db += "symptom(p{}, {}, {})\n".format(i, k, v)
+            db += "symptom(p{}, {}, {}).\n".format(i, k, v)
     db += "\n"
 
 f = open("/tf/results/db.pl", "w")
