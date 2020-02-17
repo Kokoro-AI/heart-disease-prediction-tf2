@@ -27,17 +27,12 @@ def load_heart(data_dir, config, splits):
     batch_size = 32
     feature_transform = get_feature_transform()
 
+    dfs = {'train': train, 'val': val, 'test': test} 
+
     ret = {}
     for split in splits:
-        if split == 'test':
-            features = feature_transform(dict(test)).numpy()
-            ds = df_to_dataset(features, test["target"].values, shuffle=False, batch_size=batch_size)
-        elif split == 'val':
-            features = feature_transform(dict(val)).numpy()
-            ds = df_to_dataset(features, val["target"].values, shuffle=False, batch_size=batch_size)
-        else:
-            features = feature_transform(dict(train)).numpy()
-            ds = df_to_dataset(features, train["target"].values, batch_size=batch_size)
+        features = feature_transform(dict(dfs[split])).numpy()
+        ds = df_to_dataset(features, dfs[split]["target"].values, shuffle=False, batch_size=batch_size)
 
         ret[split] = (ds, features)
 
