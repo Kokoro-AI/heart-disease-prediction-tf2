@@ -21,7 +21,8 @@ RUN apt-get update -q && \
 RUN pip install --upgrade pip && \
     pip3 install -e /develop && \
     pip3 install -U tensorflow && \
-    pip3 install tensorflow_datasets seaborn eli5 shap pdpbox sklearn opencv-python IPython && \
+    pip3 install tensorflow_datasets tensorflowjs && \
+    pip3 install seaborn eli5 shap pdpbox sklearn opencv-python IPython && \
     if [[ "$DOCKER_ENV" = "gpu" ]]; then echo -e "\e[1;31mINSTALLING GPU SUPPORT\e[0;33m"; pip3 install -U tf-nightly-gpu-2.0-preview tb-nightly; fi
 
 WORKDIR /develop

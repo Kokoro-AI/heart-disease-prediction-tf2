@@ -10,7 +10,7 @@ from src.nn.datasets import load
 
 def eval(config):
     # Files path
-    model_file = f"{config['model.save_path']}"
+    model_file = f"{config['model.path']}"
     data_dir = f"data/"
 
     ret = load(data_dir, config, ['test'])
@@ -24,8 +24,16 @@ def eval(config):
         device_name = 'CPU:0'
 
     model = tf.keras.models.load_model(model_file)
-
     model.summary()
+
+    if config['model.json_save_path'] != None:
+        model_json = model.to_json()
+        file = open(f"{config['model.json_save_path']}", "w")
+        file.write(model_json)
+        file.close()
+
+    if config['model.weights_save_path'] != None:
+        model.save_weights(f"{config['model.weights_save_path']}")
 
     predictions = tf.round(model.predict({"feature": test_features})).numpy().flatten()
     print(predictions)

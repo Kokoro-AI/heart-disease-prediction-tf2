@@ -32,7 +32,9 @@ parser.add_argument("--data.gpu", type=int, default=None)
 parser.add_argument("--data.train_size", type=float, default=None)
 parser.add_argument("--data.test_size", type=float, default=None)
 
-parser.add_argument("--model.save_path", type=str, default=None)
+parser.add_argument("--model.path", type=str, default=None)
+parser.add_argument("--model.json_save_path", type=str, default=None)
+parser.add_argument("--model.weights_save_path", type=str, default=None)
 
 # Run test
 args = vars(parser.parse_args())
