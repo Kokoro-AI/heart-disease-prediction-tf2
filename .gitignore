@@ -107,4 +107,5 @@ results/
 !results/db.pl
 !results/heart-nn-model.json
 !results/weights.heart-nn.h5
+!results/heart-nn-artifacts/
 
