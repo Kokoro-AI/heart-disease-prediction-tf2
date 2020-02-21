@@ -15,7 +15,7 @@ def eval(config):
     data_dir = f"data/"
 
     ret = load(data_dir, config, ['test'])
-    _, test_features = ret['test']
+    test_ds = ret['test']
 
     # Determine device
     if config['data.cuda']:
@@ -33,6 +33,5 @@ def eval(config):
     if config['model.json_save_path'] != "":
         tfjs.converters.save_keras_model(model, f"{config['model.json_save_path']}")
 
-
-    predictions = tf.round(model.predict({"feature": test_features})).numpy().flatten()
+    predictions = tf.round(model.predict(test_ds)).numpy().flatten()
     print(predictions)

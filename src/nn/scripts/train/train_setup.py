@@ -64,9 +64,9 @@ def train(config):
         os.makedirs(data_dir)
 
     ret = load(data_dir, config, ['train', 'val', 'test'])
-    train_ds, train_features = ret['train']
-    val_ds, val_features = ret['val']
-    test_ds, test_features = ret['test']
+    train_ds = ret['train']
+    val_ds = ret['val']
+    test_ds = ret['test']
 
     # Determine device
     if config['data.cuda']:
@@ -108,11 +108,8 @@ def train(config):
     )
 
     time_start = time.time()
-
     # Compiles a model, prints the model summary, and saves the model diagram into a png file.
-    model = create_model(input_shape=(train_features.shape[1],), learning_rate=config['train.lr'])
-    model.summary()
-    # tf.keras.utils.plot_model(model, "keras_model.png", show_shapes=True)
+    model = create_model(learning_rate=config['train.lr'])
 
     # Trains the model.
     history = model.fit(
@@ -123,8 +120,8 @@ def train(config):
         callbacks=[tensorboard_callback, logs_callback, model_checkpoint_callback, early_stop]
     )
 
-    print("Training history")
-    print(history.history)
+    model.summary()
+    # tf.keras.utils.plot_model(model, "keras_model.png", show_shapes=True)
 
     time_end = time.time()
 
@@ -134,13 +131,13 @@ def train(config):
 
     summary = "{}, {}, nn, {}, {}, {}\n".format(now_as_str, config['data.dataset'], config_path, loss, acc)
     print(summary)
-    
+
     file = open(summary_path, 'a+') 
     file.write(summary)
     file.close()
 
     # Runs prediction on test data.
-    predictions = model.predict({"feature": test_features})
+    predictions = tf.round(model.predict(test_ds)).numpy().flatten()
     print("Predictions on test data:")
     print(predictions)
 
@@ -153,7 +150,7 @@ def train(config):
         model_from_saved.summary()
 
         # Runs test data through the reloaded model to make sure the results are same.
-        predictions_from_saved = model_from_saved.predict({"feature": test_features})
+        predictions_from_saved = tf.round(model_from_saved.predict(test_ds)).numpy().flatten()
         np.testing.assert_array_equal(predictions_from_saved, predictions)
 
     elapsed = time_end - time_start
@@ -162,21 +159,71 @@ def train(config):
 
     print(f"Training took: {h:.2f}h {min:.2f}m {sec:.2f}s!")
 
-
-def create_model(input_shape, learning_rate=0.01):
+def create_model(learning_rate=0.01):
     """
         Constructs a model using various layers and compiles the model with proper
         optimizer/loss/metrics.
     """
 
-    inputs = tf.keras.Input(shape=input_shape, name="feature")
-    x = tf.keras.layers.Dense(128, kernel_initializer="normal", activation="relu", name="hidden_layer_1")(inputs)
+    feature_columns, feature_layer_inputs = get_feature_transform()
+    feature_layer = tf.keras.layers.DenseFeatures(feature_columns, name="feature")
+    feature_layer_outputs = feature_layer(feature_layer_inputs)
+
+    x = tf.keras.layers.Dense(128, kernel_initializer="normal", activation="relu", name="hidden_layer_1")(feature_layer_outputs)
     x = tf.keras.layers.Dropout(0.2, name="dropout_1")(x)
     x = tf.keras.layers.Dense(128, kernel_initializer="normal", activation="relu", name="hidden_layer_2")(x)
     baggage_pred = tf.keras.layers.Dense(1, activation="sigmoid", name="target")(x)
-
-    model = tf.keras.Model(inputs=inputs, outputs=baggage_pred, name="hdprediction")
+    
+    model = tf.keras.Model(inputs=[v for v in feature_layer_inputs.values()], outputs=baggage_pred)
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
                   loss="binary_crossentropy",
                   metrics=["accuracy"])
     return model
+
+def get_feature_transform():
+    """
+        Builds a DenseFeatures layer as feature transformation.
+
+        The function handles all feature transformation such as bucketizing,
+        vectorizing (one-hot encoding), etc.
+    """
+
+    feature_columns = []
+    feature_layer_inputs = {}
+
+    # numeric cols
+    for header in ['age', 'trestbps', 'chol', 'thalach', 'oldpeak', 'ca']:
+        feature_columns.append(tf.feature_column.numeric_column(header))
+        feature_layer_inputs[header] = tf.keras.Input(shape=(1,), name=header)
+
+    # bucketized cols
+    age = tf.feature_column.numeric_column("age")
+    age_buckets = tf.feature_column.bucketized_column(age, boundaries=[18, 25, 30, 35, 40, 45, 50, 55, 60, 65])
+    feature_columns.append(age_buckets)
+
+    # indicator cols
+    thal = tf.feature_column.categorical_column_with_vocabulary_list(
+        'thal', ['fixed', 'normal', 'reversible'])
+    thal_one_hot = tf.feature_column.indicator_column(thal)
+    feature_columns.append(thal_one_hot)
+    feature_layer_inputs['thal'] = tf.keras.Input(shape=(1,), name='thal', dtype=tf.string)
+
+    sex = tf.feature_column.categorical_column_with_vocabulary_list(
+        'sex', ['0', '1'])
+    sex_one_hot = tf.feature_column.indicator_column(sex)
+    feature_columns.append(sex_one_hot)
+    feature_layer_inputs['sex'] = tf.keras.Input(shape=(1,), name='sex', dtype=tf.string)
+
+    cp = tf.feature_column.categorical_column_with_vocabulary_list(
+        'cp', ['0', '1', '2', '3'])
+    cp_one_hot = tf.feature_column.indicator_column(cp)
+    feature_columns.append(cp_one_hot)
+    feature_layer_inputs['cp'] = tf.keras.Input(shape=(1,), name='cp', dtype=tf.string)
+
+    slope = tf.feature_column.categorical_column_with_vocabulary_list(
+        'slope', ['0', '1', '2'])
+    slope_one_hot = tf.feature_column.indicator_column(slope)
+    feature_columns.append(slope_one_hot)
+    feature_layer_inputs['slope'] = tf.keras.Input(shape=(1,), name='slope', dtype=tf.string)
+
+    return feature_columns, feature_layer_inputs
