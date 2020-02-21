@@ -20,7 +20,7 @@ def preprocess_config(c):
 
 
 parser = argparse.ArgumentParser(description="Run evaluation")
-parser.add_argument("--config", type=str, default="./src/nn/config/config_heart.conf",
+parser.add_argument("--config", type=str, default="./src/df_model/config/config_heart.conf",
                     help="Path to the config file.")
 
 parser.add_argument("--data.dataset", type=str, default=None)

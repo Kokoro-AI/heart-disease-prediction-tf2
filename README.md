@@ -5,7 +5,7 @@
 - [Quickstart](#quickstart)
 - [Datasets](#datasets)
 - [Models](#models)
-  - [NN](#nn)
+  - [Dense Features Model](#df-model)
     - [Training](#training)
     - [Evaluating](#evaluating)
 - [Results](#results)
@@ -34,7 +34,7 @@ You can execute
 $ docker exec -it <container-id> /bin/sh -c "[ -e /bin/bash ] && /bin/bash || /bin/sh"
 ```
 
-to access the running container's shell.
+to access the rudf-modeling container's shell.
 
 ## Datasets
 
@@ -42,7 +42,7 @@ to access the running container's shell.
 
 ## Models
 
-### NN
+### Dense Features Model
 
 > This is not a name, please change in the future!
 
@@ -51,7 +51,7 @@ to access the running container's shell.
 Run the following command to run training on `<config>` with default parameters.
 
 ```sh
-$ ./bin/nn --mode train --config <config>
+$ ./bin/df-model --mode train --config <config>
 ```
 
 `<config> = default | ?`
@@ -61,7 +61,7 @@ $ ./bin/nn --mode train --config <config>
 To run evaluation on a specific dataset
 
 ```sh
-$ ./bin/nn --mode eval --config <config>
+$ ./bin/df-model --mode eval --config <config>
 ```
 
 `<config> = default | ?`
@@ -90,7 +90,7 @@ where
 
 ```
 <dataset> = PUT DATASETS HERE SEPARATED BY "|" . . .
-<model> = nn | ?
+<model> = df-model | ?
 ```
 
 To run TensorBoard, use the following command:

@@ -7,7 +7,7 @@ import tensorflowjs as tfjs
 import tensorflow_datasets as tfds
 from sklearn.metrics import classification_report, confusion_matrix
 
-from src.nn.datasets import load
+from src.df_model.datasets import load
 
 def eval(config):
     # Files path

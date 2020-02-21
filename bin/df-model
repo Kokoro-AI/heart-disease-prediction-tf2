@@ -40,4 +40,4 @@ if [ ! -f src/nn/config/config_$config.conf ]; then
     exit 1
 fi
 
-python src/nn/scripts/$mode/run_$mode$all.py --config src/nn/config/config_$config.conf
+python src/df_model/scripts/$mode/run_$mode$all.py --config src/nn/config/config_$config.conf

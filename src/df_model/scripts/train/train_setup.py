@@ -9,7 +9,7 @@ import json
 import numpy as np
 import tensorflow as tf
 from datetime import datetime
-from src.nn.datasets import load
+from src.df_model.datasets import load
 
 def train(config):
     np.random.seed(2020)
@@ -129,7 +129,7 @@ def train(config):
     loss, acc = model.evaluate(val_ds)
     print("Evaluation finished!")
 
-    summary = "{}, {}, nn, {}, {}, {}\n".format(now_as_str, config['data.dataset'], config_path, loss, acc)
+    summary = "{}, {}, df_model, {}, {}, {}\n".format(now_as_str, config['data.dataset'], config_path, loss, acc)
     print(summary)
 
     file = open(summary_path, 'a+') 
