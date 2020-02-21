@@ -31,7 +31,7 @@ def load_heart(data_dir, config, splits):
     for split in splits:
         ds = df_to_dataset(dict(dfs[split]), shuffle=False, batch_size=batch_size)
 
-        ret[split] = ds
+        ret[split] = ds, dict(dfs[split])
 
     return ret
 

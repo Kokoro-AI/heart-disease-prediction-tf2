@@ -25,19 +25,25 @@ echo "Running $mode mode with $config configuration file"
 
 all=""
 
-if has_param '--all' "$@"
-then
+if has_param '--all' "$@"; then
     all="_all"
 fi
 
-if [ ! -f src/nn/config/config_$config.conf ]; then
-    echo "The entered config file \"src/nn/config/config_$config.conf\" does not exists"
+version="v2"
+if has_param '-v1' "$@"; then
+    version="v1"
+fi
+
+model="df_model_$version"
+
+if [ ! -f src/$model/config/config_$config.conf ]; then
+    echo "The entered config file \"src/$model/config/config_$config.conf\" does not exists"
     exit 1
 fi
 
-if [ ! -f src/nn/config/config_$config.conf ]; then
+if [ ! -f src/$model/config/config_$config.conf ]; then
     echo "The entered execution mode: \"$mode\" does not exists for NN model"
     exit 1
 fi
 
-python src/df_model/scripts/$mode/run_$mode$all.py --config src/nn/config/config_$config.conf
+python src/$model/scripts/$mode/run_$mode$all.py --config src/$model/config/config_$config.conf

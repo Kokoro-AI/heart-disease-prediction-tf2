@@ -18,7 +18,7 @@ def preprocess_config(c):
 
 
 parser = argparse.ArgumentParser(description='Run training')
-parser.add_argument("--config", type=str, default="./src/df_model/config/config_heart.conf",
+parser.add_argument("--config", type=str, default="./src/df_model_v1/config/config_heart.conf",
                     help="Path to the config file.")
 
 parser.add_argument("--data.dataset", type=str, default=None)

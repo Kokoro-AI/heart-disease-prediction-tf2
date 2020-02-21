@@ -7,7 +7,7 @@ import tensorflowjs as tfjs
 import tensorflow_datasets as tfds
 from sklearn.metrics import classification_report, confusion_matrix
 
-from src.df_model.datasets import load
+from src.df_model_v2.datasets import load
 
 def eval(config):
     # Files path
@@ -15,7 +15,7 @@ def eval(config):
     data_dir = f"data/"
 
     ret = load(data_dir, config, ['test'])
-    test_ds = ret['test']
+    test_ds, _ = ret['test']
 
     # Determine device
     if config['data.cuda']:
