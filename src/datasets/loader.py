@@ -1,6 +1,6 @@
 from .heart import load_heart
 
-def load(data_dir, config, splits, use_feature_transform=False):
+def load(data_dir, config, splits, use_feature_transform=False, numeric=False, categorical=False):
     """
     Load specific dataset.
     Args:
@@ -13,7 +13,9 @@ def load(data_dir, config, splits, use_feature_transform=False):
     """
 
     if config['data.dataset'] == "heart":
-        ret = load_heart(data_dir, config, splits, use_feature_transform)
+        ret = load_heart(data_dir, config, splits,
+                         use_feature_transform=use_feature_transform,
+                         numeric=numeric, categorical=categorical)
     else:
         raise ValueError(f"Unknow dataset: {config['data.dataset']}")
 

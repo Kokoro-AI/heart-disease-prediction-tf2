@@ -19,7 +19,7 @@ variables["--config"]="config"
 
 . ./scripts/flags/arguments.sh
 
-model=${model:-"tfjs"}
+model=${model:-"tfjs_model"}
 mode=${mode:-"train"}
 config=${config:-"default"}
 
@@ -36,14 +36,14 @@ if has_param '-v1' "$@"; then
     version="v1"
 fi
 
-if [ ! -f src/${model}_model/config/config_$config.conf ]; then
-    echo "The entered config file \"src/${model}_model/config/config_$config.conf\" does not exists"
+if [ ! -f src/${model}/config/config_$config.conf ]; then
+    echo "The entered config file \"src/${model}/config/config_$config.conf\" does not exists"
     exit 1
 fi
 
-if [ ! -f src/${model}_model/config/config_$config.conf ]; then
+if [ ! -f src/${model}/config/config_$config.conf ]; then
     echo "The entered execution mode: \"$mode\" does not exists for $model model"
     exit 1
 fi
 
-python src/${model}_model/scripts/$mode/run_$mode$all.py --config src/${model}_model/config/config_$config.conf
+python src/${model}/scripts/$mode/run_$mode$all.py --config src/${model}/config/config_$config.conf
