@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 def load_heart(data_dir, config, splits, use_feature_transform=False):
     """
@@ -20,6 +21,7 @@ def load_heart(data_dir, config, splits, use_feature_transform=False):
     data = pd.read_csv(DATASET_PATH)
     data = preprocess_data(data)
 
+
     train, test = train_test_split(data, test_size=0.1, random_state=RANDOM_SEED)
     train, val = train_test_split(train, test_size=0.1, random_state=RANDOM_SEED)
 
@@ -32,18 +34,22 @@ def load_heart(data_dir, config, splits, use_feature_transform=False):
     ret = {}
     for split in splits:
         if use_feature_transform == True:
-            features = feature_transform(dict(dfs[split])).numpy()
+            features, _ = feature_transform(dict(dfs[split])).numpy()
             ds = df_to_dataset(features, dfs[split]["target"].values, shuffle=False, batch_size=batch_size)
-            ret[split] = ds, features
+            ret[split] = ds, features, dfs[split]["target"].values
         else:
             labels = dfs[split].pop('target')
             ds = df_to_dataset(dict(dfs[split]), labels, shuffle=False, batch_size=batch_size)
-            ret[split] = ds, dfs[split]
+            ret[split] = ds, dict(dfs[split]), labels
 
     return ret
 
 def preprocess_data(idata):
     data = idata.copy()
+
+    # s_sc = StandardScaler()
+    # col_to_scale = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak']
+    # data[col_to_scale] = s_sc.fit_transform(data[col_to_scale])
 
     data["thal"] = data["thal"].apply(str)
     data["sex"] = data["sex"].apply(str)

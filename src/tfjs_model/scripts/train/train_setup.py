@@ -64,9 +64,9 @@ def train(config):
         os.makedirs(data_dir)
 
     ret = load(data_dir, config, ['train', 'val', 'test'])
-    train_ds, train_features = ret['train']
-    val_ds, _ = ret['val']
-    test_ds, _ = ret['test']
+    train_ds, train_features, _ = ret['train']
+    val_ds, _, _ = ret['val']
+    test_ds, _, _ = ret['test']
 
     # Determine device
     if config['data.cuda']:
@@ -109,8 +109,12 @@ def train(config):
 
     time_start = time.time()
     # Compiles a model, prints the model summary, and saves the model diagram into a png file.
-    input_shape = (np.shape(train_features)[1],)
+    input_shape = (len(train_features.keys()),)
+    print(input_shape)
     model = create_model(input_shape=input_shape, learning_rate=config['train.lr'])
+    
+    model.summary()
+    # tf.keras.utils.plot_model(model, "keras_model.png", show_shapes=True)
 
     # Trains the model.
     history = model.fit(
@@ -121,8 +125,6 @@ def train(config):
         callbacks=[tensorboard_callback, logs_callback, model_checkpoint_callback, early_stop]
     )
 
-    model.summary()
-    # tf.keras.utils.plot_model(model, "keras_model.png", show_shapes=True)
 
     time_end = time.time()
 
@@ -168,11 +170,34 @@ def create_model(input_shape, learning_rate=0.01):
 
     model = tf.keras.Sequential()
 
-    model.add(tf.keras.layers.Dense(11, activation='relu'))
-    model.add(tf.keras.layers.Dense(11, activation='relu'))
-    model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
+    for input_layer in get_feature_layer_inputs():
+        model.add(input_layer)
+
+    model.add(tf.keras.layers.Dense(15, kernel_initializer="normal", activation="relu", name="hidden_layer_1"))
+    model.add(tf.keras.layers.Dense(64, kernel_initializer="normal", activation="relu", name="hidden_layer_2"))
+    model.add(tf.keras.layers.Dropout(0.3, name="dropout_1"))
+    model.add(tf.keras.layers.Dense(32, kernel_initializer="normal", activation="relu", name="hidden_layer_3"))
+    model.add(tf.keras.layers.Dense(1, activation="sigmoid", name="target"))
 
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
                   loss="binary_crossentropy",
                   metrics=["accuracy"])
     return model
+
+def get_feature_layer_inputs():
+    """
+        Builds feature layer inputs as keras Input.
+    """
+
+    feature_layer_inputs = []
+
+    # numeric cols
+    for header in ['age', 'trestbps', 'chol', 'thalach', 'oldpeak', 'ca']:
+        feature_layer_inputs.append(tf.keras.Input(shape=(1,), name=header))
+
+    feature_layer_inputs.append(tf.keras.Input(shape=(1,), name='thal', dtype=tf.string))
+    feature_layer_inputs.append(tf.keras.Input(shape=(1,), name='sex', dtype=tf.string))
+    feature_layer_inputs.append(tf.keras.Input(shape=(1,), name='cp', dtype=tf.string))
+    feature_layer_inputs.append(tf.keras.Input(shape=(1,), name='slope', dtype=tf.string))
+
+    return feature_layer_inputs

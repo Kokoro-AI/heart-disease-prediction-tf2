@@ -15,7 +15,7 @@ def eval(config):
     data_dir = f"data/"
 
     ret = load(data_dir, config, ['test'], use_feature_transform=True)
-    _, test_features = ret['test']
+    _, test_features, _ = ret['test']
 
     # Determine device
     if config['data.cuda']:

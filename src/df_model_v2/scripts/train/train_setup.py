@@ -64,9 +64,9 @@ def train(config):
         os.makedirs(data_dir)
 
     ret = load(data_dir, config, ['train', 'val', 'test'])
-    train_ds, _ = ret['train']
-    val_ds, _ = ret['val']
-    test_ds, _ = ret['test']
+    train_ds, _, _ = ret['train']
+    val_ds, _, _ = ret['val']
+    test_ds, _, _ = ret['test']
 
     # Determine device
     if config['data.cuda']:
