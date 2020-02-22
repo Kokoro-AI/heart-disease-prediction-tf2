@@ -13,11 +13,13 @@ has_param() {
 
 . ./scripts/flags/declares.sh
 
+variables["--model"]="model"
 variables["--mode"]="mode"
 variables["--config"]="config"
 
 . ./scripts/flags/arguments.sh
 
+model=${model:-"tfjs"}
 mode=${mode:-"train"}
 config=${config:-"default"}
 
@@ -34,16 +36,14 @@ if has_param '-v1' "$@"; then
     version="v1"
 fi
 
-model="df_model_$version"
-
-if [ ! -f src/$model/config/config_$config.conf ]; then
-    echo "The entered config file \"src/$model/config/config_$config.conf\" does not exists"
+if [ ! -f src/${model}_model/config/config_$config.conf ]; then
+    echo "The entered config file \"src/${model}_model/config/config_$config.conf\" does not exists"
     exit 1
 fi
 
-if [ ! -f src/$model/config/config_$config.conf ]; then
-    echo "The entered execution mode: \"$mode\" does not exists for NN model"
+if [ ! -f src/${model}_model/config/config_$config.conf ]; then
+    echo "The entered execution mode: \"$mode\" does not exists for $model model"
     exit 1
 fi
 
-python src/$model/scripts/$mode/run_$mode$all.py --config src/$model/config/config_$config.conf
+python src/${model}_model/scripts/$mode/run_$mode$all.py --config src/${model}_model/config/config_$config.conf

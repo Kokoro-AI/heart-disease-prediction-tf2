@@ -3,7 +3,7 @@ import pandas as pd
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
-def load_heart(data_dir, config, splits):
+def load_heart(data_dir, config, splits, use_feature_transform=False):
     """
     Load heart dataset.
     Args:
@@ -24,17 +24,21 @@ def load_heart(data_dir, config, splits):
     train, val = train_test_split(train, test_size=0.1, random_state=RANDOM_SEED)
 
     # Defines datasets on the input data.
-    batch_size = 32
+    batch_size = config['data.batch_size']
     feature_transform = get_feature_transform()
 
     dfs = {'train': train, 'val': val, 'test': test} 
 
     ret = {}
     for split in splits:
-        features = feature_transform(dict(dfs[split])).numpy()
-        ds = df_to_dataset(features, dfs[split]["target"].values, shuffle=False, batch_size=batch_size)
-
-        ret[split] = (ds, features)
+        if use_feature_transform == True:
+            features = feature_transform(dict(dfs[split])).numpy()
+            ds = df_to_dataset(features, dfs[split]["target"].values, shuffle=False, batch_size=batch_size)
+            ret[split] = ds, features
+        else:
+            labels = dfs[split].pop('target')
+            ds = df_to_dataset(dict(dfs[split]), labels, shuffle=False, batch_size=batch_size)
+            ret[split] = ds, dfs[split]
 
     return ret
 
@@ -49,7 +53,7 @@ def preprocess_data(idata):
     return data
 
 def df_to_dataset(features, labels, shuffle=True, batch_size=32):
-    ds = tf.data.Dataset.from_tensor_slices(({"feature": features}, {"target": labels}))
+    ds = tf.data.Dataset.from_tensor_slices((features, labels))
     if shuffle:
         ds = ds.shuffle(buffer_size=len(features))
     ds = ds.batch(batch_size)

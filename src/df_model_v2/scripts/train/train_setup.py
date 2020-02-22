@@ -9,7 +9,7 @@ import json
 import numpy as np
 import tensorflow as tf
 from datetime import datetime
-from src.df_model_v2.datasets import load
+from src.datasets import load
 
 def train(config):
     np.random.seed(2020)

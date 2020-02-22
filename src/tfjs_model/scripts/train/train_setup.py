@@ -63,10 +63,10 @@ def train(config):
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
-    ret = load(data_dir, config, ['train', 'val', 'test'], use_feature_transform=True)
+    ret = load(data_dir, config, ['train', 'val', 'test'])
     train_ds, train_features = ret['train']
-    val_ds, val_features = ret['val']
-    test_ds, test_features = ret['test']
+    val_ds, _ = ret['val']
+    test_ds, _ = ret['test']
 
     # Determine device
     if config['data.cuda']:
@@ -108,11 +108,9 @@ def train(config):
     )
 
     time_start = time.time()
-
     # Compiles a model, prints the model summary, and saves the model diagram into a png file.
-    model = create_model(input_shape=(train_features.shape[1],), learning_rate=config['train.lr'])
-    model.summary()
-    # tf.keras.utils.plot_model(model, "keras_model.png", show_shapes=True)
+    input_shape = (np.shape(train_features)[1],)
+    model = create_model(input_shape=input_shape, learning_rate=config['train.lr'])
 
     # Trains the model.
     history = model.fit(
@@ -123,8 +121,8 @@ def train(config):
         callbacks=[tensorboard_callback, logs_callback, model_checkpoint_callback, early_stop]
     )
 
-    print("Training history")
-    print(history.history)
+    model.summary()
+    # tf.keras.utils.plot_model(model, "keras_model.png", show_shapes=True)
 
     time_end = time.time()
 
@@ -132,15 +130,15 @@ def train(config):
     loss, acc = model.evaluate(val_ds)
     print("Evaluation finished!")
 
-    summary = "{}, {}, nn, {}, {}, {}\n".format(now_as_str, config['data.dataset'], config_path, loss, acc)
+    summary = "{}, {}, df_model, {}, {}, {}\n".format(now_as_str, config['data.dataset'], config_path, loss, acc)
     print(summary)
-    
+
     file = open(summary_path, 'a+') 
     file.write(summary)
     file.close()
 
     # Runs prediction on test data.
-    predictions = tf.round(model.predict(test_features)).numpy().flatten()
+    predictions = tf.round(model.predict(test_ds)).numpy().flatten()
     print("Predictions on test data:")
     print(predictions)
 
@@ -153,7 +151,7 @@ def train(config):
         model_from_saved.summary()
 
         # Runs test data through the reloaded model to make sure the results are same.
-        predictions_from_saved = tf.round(model_from_saved.predict(test_features)).numpy().flatten()
+        predictions_from_saved = tf.round(model_from_saved.predict(test_ds)).numpy().flatten()
         np.testing.assert_array_equal(predictions_from_saved, predictions)
 
     elapsed = time_end - time_start
@@ -162,20 +160,18 @@ def train(config):
 
     print(f"Training took: {h:.2f}h {min:.2f}m {sec:.2f}s!")
 
-
 def create_model(input_shape, learning_rate=0.01):
     """
         Constructs a model using various layers and compiles the model with proper
         optimizer/loss/metrics.
     """
 
-    inputs = tf.keras.Input(shape=input_shape, name="feature")
-    x = tf.keras.layers.Dense(128, kernel_initializer="normal", activation="relu", name="hidden_layer_1")(inputs)
-    x = tf.keras.layers.Dropout(0.2, name="dropout_1")(x)
-    x = tf.keras.layers.Dense(128, kernel_initializer="normal", activation="relu", name="hidden_layer_2")(x)
-    baggage_pred = tf.keras.layers.Dense(1, activation="sigmoid", name="target")(x)
+    model = tf.keras.Sequential()
 
-    model = tf.keras.Model(inputs=inputs, outputs=baggage_pred, name="hdprediction")
+    model.add(tf.keras.layers.Dense(11, activation='relu'))
+    model.add(tf.keras.layers.Dense(11, activation='relu'))
+    model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
+
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
                   loss="binary_crossentropy",
                   metrics=["accuracy"])

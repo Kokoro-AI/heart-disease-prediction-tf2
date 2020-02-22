@@ -7,14 +7,14 @@ import tensorflowjs as tfjs
 import tensorflow_datasets as tfds
 from sklearn.metrics import classification_report, confusion_matrix
 
-from src.df_model_v1.datasets import load
+from src.datasets import load
 
 def eval(config):
     # Files path
     model_file = f"{config['model.path']}"
     data_dir = f"data/"
 
-    ret = load(data_dir, config, ['test'])
+    ret = load(data_dir, config, ['test'], use_feature_transform=True)
     _, test_features = ret['test']
 
     # Determine device
@@ -33,5 +33,5 @@ def eval(config):
     if config['model.json_save_path'] != "":
         tfjs.converters.save_keras_model(model, f"{config['model.json_save_path']}")
 
-    predictions = tf.round(model.predict({"feature": test_features})).numpy().flatten()
+    predictions = tf.round(model.predict(test_features)).numpy().flatten()
     print(predictions)

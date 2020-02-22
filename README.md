@@ -5,7 +5,7 @@
 - [Quickstart](#quickstart)
 - [Datasets](#datasets)
 - [Models](#models)
-  - [Dense Features Model](#df-model)
+  - [Dense Features Model](#df_model)
     - [Training](#training)
     - [Evaluating](#evaluating)
 - [Results](#results)
@@ -34,7 +34,7 @@ You can execute
 $ docker exec -it <container-id> /bin/sh -c "[ -e /bin/bash ] && /bin/bash || /bin/sh"
 ```
 
-to access the rudf-modeling container's shell.
+to access the rudf_modeling container's shell.
 
 ## Datasets
 
@@ -42,29 +42,27 @@ to access the rudf-modeling container's shell.
 
 ## Models
 
-### Dense Features Model
-
-> This is not a name, please change in the future!
-
 #### Training
 
 Run the following command to run training on `<config>` with default parameters.
 
 ```sh
-$ ./bin/df-model --mode train --config <config>
+$ ./bin/execute --model <model> --mode train --config <config>
 ```
 
-`<config> = default | ?`
+`<model> = df_model_v1 | df_model_v2 | tfjs`
+`<config> = default | heart`
 
 #### Evaluating
 
 To run evaluation on a specific dataset
 
 ```sh
-$ ./bin/df-model --mode eval --config <config>
+$ ./bin/execute --model <model> --mode eval --config <config>
 ```
 
-`<config> = default | ?`
+`<model> = df_model_v1 | df_model_v2 | tfjs`
+`<config> = default | heart`
 
 ## Results
 
@@ -89,8 +87,8 @@ summaries are listed by date.
 where
 
 ```
-<dataset> = PUT DATASETS HERE SEPARATED BY "|" . . .
-<model> = df-model | ?
+<dataset> = heart | ?
+<model> = <model> = df_model_v1 | df_model_v2 | tfjs
 ```
 
 To run TensorBoard, use the following command:

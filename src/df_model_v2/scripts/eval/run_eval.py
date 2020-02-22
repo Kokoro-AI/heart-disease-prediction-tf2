@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(description="Run evaluation")
 
 def preprocess_config(c):
     conf_dict = {}
-    int_params = ["data.episodes", "data.gpu", "data.cuda"]
+    int_params = ["data.batch_size", "data.episodes", "data.gpu", "data.cuda"]
     float_params = ["data.train_size", "data.test_size"]
     for param in c:
         if param in int_params:
@@ -25,6 +25,7 @@ parser.add_argument("--config", type=str, default="./src/df_model_v2/config/conf
 
 parser.add_argument("--data.dataset", type=str, default=None)
 parser.add_argument("--data.split", type=str, default=None)
+parser.add_argument("--data.batch_size", type=int, default=None)
 parser.add_argument("--data.episodes", type=int, default=None)
 parser.add_argument("--data.cuda", type=int, default=None)
 parser.add_argument("--data.gpu", type=int, default=None)
