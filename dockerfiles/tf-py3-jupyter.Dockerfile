@@ -1,6 +1,6 @@
-ARG DOCKER_ENV=cpu
+ARG DOCKER_ENV=latest
 
-FROM ulisesjeremias/tf-docker:${DOCKER_ENV}-jupyter
+FROM tensorflow/tensorflow:${DOCKER_ENV}
 # DOCKER_ENV are specified again because the FROM directive resets ARGs
 # (but their default value is retained if set previously)
 
@@ -17,12 +17,12 @@ RUN apt-get update -q && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install models, scripts and heart-disease-prediction utils
+# Install models, scripts and utils
 RUN pip install --upgrade pip && \
     pip3 install -e /develop && \
     pip3 install -U tensorflow && \
+    pip3 install gdown==3.10.0 && \
     pip3 install tensorflow_datasets tensorflowjs && \
-    pip3 install seaborn eli5 shap pdpbox sklearn opencv-python IPython && \
-    if [[ "$DOCKER_ENV" = "gpu" ]]; then echo -e "\e[1;31mINSTALLING GPU SUPPORT\e[0;33m"; pip3 install -U tf-nightly-gpu-2.0-preview tb-nightly; fi
+    pip3 install seaborn eli5 shap pydot pdpbox sklearn opencv-python IPython prettytable py7zr
 
 WORKDIR /develop
