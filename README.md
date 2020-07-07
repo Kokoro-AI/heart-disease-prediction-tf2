@@ -64,7 +64,7 @@ Run the following command to run training on `<config>` with default parameters.
 $ ./bin/run --model <model> --mode train --config <config>
 ```
 
-`<model> = df_model_v1 | df_model_v2 | tfjs`
+`<model> = df_v1 | df_v2 | tfjs`
 `<config> = default | heart`
 
 #### Evaluating
@@ -75,7 +75,7 @@ To run evaluation on a specific dataset
 $ ./bin/run --model <model> --mode eval --config <config>
 ```
 
-`<model> = df_model_v1 | df_model_v2 | tfjs`
+`<model> = df_v1 | df_v2 | tfjs`
 `<config> = default | heart`
 
 ## Results
@@ -102,7 +102,7 @@ where
 
 ```
 <dataset> = heart | ?
-<model> = <model> = df_model_v1 | df_model_v2 | tfjs
+<model> = <model> = df_v1 | df_v2 | tfjs
 ```
 
 To run TensorBoard, use the following command:
