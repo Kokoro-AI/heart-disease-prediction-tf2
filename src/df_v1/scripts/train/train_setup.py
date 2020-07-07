@@ -99,7 +99,7 @@ def train(config):
         if not os.path.exists(split_results_dir):
             os.makedirs(split_results_dir)
         
-        tf.keras.utils.plot_model(model, os.path.join(split_results_dir, "keras_model.png"), show_shapes=True)
+        tf.keras.utils.plot_model(model, os.path.join(split_results_dir, "keras_model.png"), show_shapes=True, show_layer_names=False)
 
         callbacks = create_callbacks(
             tensorboard_summary_dir.format(split=split),
