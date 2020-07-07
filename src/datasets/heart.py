@@ -5,14 +5,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.utils import to_categorical
 
-def load_heart(data_dir, config, splits, use_feature_transform=False, numeric=False, categorical=False):
+def load_heart(data_dir, config, use_feature_transform=False, numeric=False, categorical=False):
     """
     Load heart dataset.
     Args:
         data_dir (str): path of the directory with 'splits', 'data' subdirs.
         config (dict): general dict with program settings.
-        splits (list): list of strings 'train'|'val'|'test'
-    Returns (dict): dictionary with keys as splits and values
+        splits (list): list of strings 'train'|'test'
+    Returns ds, X, y
     """
 
     RANDOM_SEED=42
@@ -30,35 +30,24 @@ def load_heart(data_dir, config, splits, use_feature_transform=False, numeric=Fa
         X = data.drop(['target'], axis=1)
         y = data['target']
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=RANDOM_SEED)
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.1, random_state=RANDOM_SEED)
-
     if categorical == True:
-        y_train = to_categorical(y_train, num_classes=None)
-        y_test = to_categorical(y_test, num_classes=None)
-        y_val = to_categorical(y_val, num_classes=None)
+        y = to_categorical(y, num_classes=None)
 
     # Defines datasets on the input data.
     batch_size = config['data.batch_size']
     feature_transform = get_feature_transform()
 
-    dfs = {'train': (X_train, y_train), 'val': (X_val, y_val), 'test': (X_test, y_test)} 
-
-    ret = {}
-    for split in splits:
-        if use_feature_transform == True:
-            features = feature_transform(dict(dfs[split][0])).numpy()
-            ds = df_to_dataset(features, dfs[split][1], shuffle=False, batch_size=batch_size)
-            ret[split] = ds, features, dfs[split][1]
+    if use_feature_transform == True:
+        features = feature_transform(dict(X)).numpy()
+        ds = df_to_dataset(features, y, shuffle=False, batch_size=batch_size)
+        return ds, features, y
+    else:
+        labels = y
+        if numeric:
+            ds = df_to_dataset(X, labels, shuffle=False, batch_size=batch_size)
         else:
-            labels = dfs[split][1]
-            if numeric:
-                ds = df_to_dataset(dfs[split][0], labels, shuffle=False, batch_size=batch_size)
-            else:
-                ds = df_to_dataset(dict(dfs[split][0]), labels, shuffle=False, batch_size=batch_size)
-            ret[split] = ds, dfs[split][0], labels
-
-    return ret
+            ds = df_to_dataset(dict(X), labels, shuffle=False, batch_size=batch_size)
+        return ds, X, labels
 
 def preprocess_data(idata):
     data = idata.copy()

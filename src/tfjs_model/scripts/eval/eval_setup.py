@@ -14,8 +14,7 @@ def eval(config):
     model_file = f"{config['model.path']}"
     data_dir = f"data/"
 
-    ret = load(data_dir, config, ['test'], numeric=True)
-    _, X_test, y_test = ret['test']
+    _, X, y = load(data_dir, config, numeric=True)
 
     # Determine device
     if config['data.cuda']:
@@ -33,7 +32,7 @@ def eval(config):
     if config['model.json_save_path'] != "":
         tfjs.converters.save_keras_model(model, f"{config['model.json_save_path']}")
 
-    predictions = tf.round(model.predict(X_test)).numpy().flatten()
+    predictions = tf.round(model.predict(X)).numpy().flatten()
     print('Results for Binary Model')
-    print(accuracy_score(y_test, predictions))
-    print(classification_report(y_test, predictions))
+    print(accuracy_score(y, predictions))
+    print(classification_report(y, predictions))

@@ -14,8 +14,7 @@ def eval(config):
     model_file = f"{config['model.path']}"
     data_dir = f"data/"
 
-    ret = load(data_dir, config, ['test'], use_feature_transform=True)
-    _, test_features, _ = ret['test']
+    _, test_features, _ = load(data_dir, config, use_feature_transform=True)
 
     # Determine device
     if config['data.cuda']:

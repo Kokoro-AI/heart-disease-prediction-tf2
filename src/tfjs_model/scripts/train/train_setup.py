@@ -10,6 +10,7 @@ import numpy as np
 import tensorflow as tf
 from datetime import datetime
 from src.datasets import load
+from sklearn.model_selection import StratifiedKFold, train_test_split
 
 def train(config):
     np.random.seed(2020)
@@ -56,17 +57,14 @@ def train(config):
     # create summary file if not exists
     if not os.path.exists(summary_path):
         file = open(summary_path, 'w')
-        file.write("datetime, model, config, min_loss, min_loss_accuracy\n")
+        file.write("datetime, model, config, acc_std, acc_mean\n")
         file.close()
 
     # Data loader
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
-    ret = load(data_dir, config, ['train', 'val', 'test'], numeric=True)
-    _, X_train, y_train = ret['train']
-    _, X_test, y_test = ret['test']
-    _, X_val, y_val = ret['val']
+    _, X, y = load(data_dir, config, numeric=True)
 
     # Defines datasets on the input data.
     batch_size = config['data.batch_size']
@@ -111,30 +109,49 @@ def train(config):
     )
 
     time_start = time.time()
-    # Compiles a model, prints the model summary, and saves the model diagram into a png file.
-    input_shape = (X_train.shape[1],)
-    model = create_model(input_shape=input_shape, learning_rate=config['train.lr'])
-    
-    model.summary()
-    # tf.keras.utils.plot_model(model, "keras_model.png", show_shapes=True)
 
-    # Trains the model.
-    history = model.fit(
-        x=X_train,
-        y=y_train,
-        validation_data=(X_val, y_val),
-        epochs=config['train.epochs'],
-        use_multiprocessing=True,
-        callbacks=[tensorboard_callback, logs_callback, model_checkpoint_callback, early_stop]
-    )
+    # define 10-fold cross validation test harness
+    kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=seed)
+    cvscores = []
+    print ("Running model performance validation... please wait!")
+
+    for train_index, test_index in kfold.split(X, y):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+
+        X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.1, random_state=RANDOM_SEED)
+
+        # Compiles a model, prints the model summary, and saves the model diagram into a png file.
+        input_shape = (X_train.shape[1],)
+        model = create_model(input_shape=input_shape, learning_rate=config['train.lr'])
+        
+        model.summary()
+        tf.keras.utils.plot_model(model, "keras_model.png", show_shapes=True)
+
+        # Fit the model
+        history = model.fit(
+            X_train,
+            y_train,
+            validation_data=(X_val, y_val),
+            epochs=config['train.epochs'],
+            batch_size=6,
+            verbose=0,
+            use_multiprocessing=True,
+            callbacks=[tensorboard_callback, logs_callback, model_checkpoint_callback, early_stop]
+        )    
+        # evaluate the model
+        scores = model.evaluate(X_test, y_test, verbose=0)
+        print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
+        cvscores.append(scores[1] * 100)
+
+    print ("Done.")
+    print ("Summary report on mean and std.")
+    # The average and standard deviation of the model performance 
+    print("%.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
 
     time_end = time.time()
 
-    # Evaluates on test data.
-    loss, acc = model.evaluate(x = X_val, y = y_val)
-    print("Evaluation finished!")
-
-    summary = "{}, {}, df_model, {}, {}, {}\n".format(now_as_str, config['data.dataset'], config_path, loss, acc)
+    summary = "{}, {}, df_model, {}, {}, {}\n".format(now_as_str, config['data.dataset'], config_path, np.std(cvscores), np.mean(cvscores))
     print(summary)
 
     file = open(summary_path, 'a+') 
@@ -170,11 +187,17 @@ def create_model(input_shape, learning_rate=0.01):
         optimizer/loss/metrics.
     """
 
-    model = tf.keras.Sequential()
+    model = Sequential(name="Probabilistic_Classifier_for_Heart_Disease")
 
-    model.add(tf.keras.layers.Dense(16, kernel_initializer="normal", activation="relu", name="hidden_layer_1", input_dim=input_shape[0]))
-    model.add(tf.keras.layers.Dense(8, kernel_initializer="normal", activation="relu", name="hidden_layer_2"))
-    model.add(tf.keras.layers.Dense(1, activation="sigmoid", name="target"))
+    model.add(Dense(16, kernel_initializer="normal", activation="relu", name="hidden_layer_1", input_dim=input_shape[0]))
+    model.add(Dropout(0.0325))
+    model.add(Dense(32, kernel_initializer="normal", activation="relu", name="hidden_layer_2"))
+    model.add(Dropout(0.0325))
+    model.add(Dense(32, kernel_initializer="normal", activation="relu", name="hidden_layer_3"))
+    model.add(Dropout(0.0325))
+    model.add(Dense(32, kernel_initializer="normal", activation="relu", name="hidden_layer_4"))
+    model.add(Dropout(0.0325))
+    model.add(Dense(1, activation="sigmoid", name="target"))
 
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
                   loss="binary_crossentropy",
