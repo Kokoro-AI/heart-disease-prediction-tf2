@@ -13,7 +13,7 @@ from tensorflow.keras import Input, Model
 from src.datasets import load
 from src.utils.callbacks import create_callbacks
 from tensorflow.keras.layers import Dense, DenseFeatures, Dropout
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, train_test_split
 
 def train(config):
     np.random.seed(2020)
@@ -30,21 +30,25 @@ def train(config):
     tensorboard_summary_dir = config['summary.save_path']
     summary_path = "results/summary.csv"
 
-    file = open(f"{csv_output_path}", 'w') 
-    file.write("")
-    file.close()
-
     # Output dirs
-    data_dir = f"data/"
+    data_dir = "data/"
     config_dir = config_path[:config_path.rfind('/')]
+    output_dir = csv_output_path[:csv_output_path.rfind('/')]
 
     # Create folder for config
     if not os.path.exists(config_dir):
         os.makedirs(config_dir)
 
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     # generate config file
     file = open(config_path, 'w')
     file.write(json.dumps(config, indent=2))
+    file.close()
+    
+    file = open(csv_output_path, 'w') 
+    file.write("")
     file.close()
 
     # create summary file if not exists
@@ -57,7 +61,7 @@ def train(config):
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
-    _, X, y = load(data_dir, config, numeric=True)
+    _, X, y = load(data_dir, config)
 
     # Defines datasets on the input data.
     batch_size = config['data.batch_size']
@@ -76,13 +80,11 @@ def train(config):
     cvscores = []
     print ("Running model performance validation... please wait!")
 
-    for split, (train_index, test_index) in enumerate(skf.split(X, y)):
-        X_train, X_test = X[train_index], X[test_index]
-        y_train, y_test = y[train_index], y[test_index]
+    for split in range(10):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=40 + split)
 
         # Compiles a model, prints the model summary, and saves the model diagram into a png file.
-        input_shape = (X_train.shape[1],)
-        model = create_model(input_shape=input_shape, learning_rate=config['train.lr'])
+        model = create_model(learning_rate=config['train.lr'])
         model.summary()
 
         split_checkpoint_path = checkpoint_path.format(split=split)
@@ -111,23 +113,22 @@ def train(config):
         # Fit the model
         with tf.device(device_name):
             history = model.fit(
-                X_train,
+                dict(X_train),
                 y_train,
                 validation_split=0.1,
                 epochs=config['train.epochs'],
                 batch_size=config['data.batch_size'],
-                verbose=0,
                 use_multiprocessing=True,
                 callbacks=callbacks
             )
 
         # evaluate the model
-        scores = model.evaluate(X_test, y_test, verbose=0)
+        scores = model.evaluate(dict(X_test), y_test, verbose=0)
         print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
         cvscores.append(scores[1] * 100)
 
         # Runs prediction on test data.
-        predictions = tf.round(model.predict(X_test)).numpy().flatten()
+        predictions = tf.round(model.predict(dict(X_test))).numpy().flatten()
         print("Predictions on test data:")
         print(predictions)
 
@@ -140,7 +141,7 @@ def train(config):
             model_from_saved.summary()
 
             # Runs test data through the reloaded model to make sure the results are same.
-            predictions_from_saved = tf.round(model_from_saved.predict(X_test)).numpy().flatten()
+            predictions_from_saved = tf.round(model_from_saved.predict(dict(X_test))).numpy().flatten()
             np.testing.assert_array_equal(predictions_from_saved, predictions)
 
     print ("Done.")

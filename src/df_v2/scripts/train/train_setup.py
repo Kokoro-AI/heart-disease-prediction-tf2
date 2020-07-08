@@ -30,21 +30,25 @@ def train(config):
     tensorboard_summary_dir = config['summary.save_path']
     summary_path = "results/summary.csv"
 
-    file = open(f"{csv_output_path}", 'w') 
-    file.write("")
-    file.close()
-
     # Output dirs
-    data_dir = f"data/"
+    data_dir = "data/"
     config_dir = config_path[:config_path.rfind('/')]
+    output_dir = csv_output_path[:csv_output_path.rfind('/')]
 
     # Create folder for config
     if not os.path.exists(config_dir):
         os.makedirs(config_dir)
 
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     # generate config file
     file = open(config_path, 'w')
     file.write(json.dumps(config, indent=2))
+    file.close()
+    
+    file = open(csv_output_path, 'w') 
+    file.write("")
     file.close()
 
     # create summary file if not exists
@@ -57,7 +61,7 @@ def train(config):
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
-    _, X, y = load(data_dir, config, numeric=True)
+    _, X, y = load(data_dir, config, use_feature_transform=True)
 
     # Defines datasets on the input data.
     batch_size = config['data.batch_size']
@@ -116,7 +120,6 @@ def train(config):
                 validation_split=0.1,
                 epochs=config['train.epochs'],
                 batch_size=config['data.batch_size'],
-                verbose=0,
                 use_multiprocessing=True,
                 callbacks=callbacks
             )
@@ -162,7 +165,6 @@ def train(config):
     sec = elapsed-min*60
 
     print(f"Training took: {h:.2f}h {min:.2f}m {sec:.2f}s!")
-
 
 def create_model(input_shape, learning_rate=0.01):
     """
