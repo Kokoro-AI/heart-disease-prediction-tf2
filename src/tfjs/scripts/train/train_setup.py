@@ -155,6 +155,7 @@ def train(config):
 
     summary = "{}, {}, df, {}, {}, {}\n".format(now_as_str, config['data.dataset'], config_path, np.std(cvscores), np.mean(cvscores))
     print(summary)
+    print(cvscores)
 
     file = open(summary_path, 'a+') 
     file.write(summary)
